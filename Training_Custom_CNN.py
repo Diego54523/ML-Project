@@ -97,8 +97,7 @@ if __name__ == '__main__':
     # Manteniamo le immagini come PIL per permettere una Data Augmentation migliore dopo
     raw_transform = transforms.Compose([
         transforms.Grayscale(num_output_channels=1),
-        transforms.Resize(IMG_SIZE),
-        transforms.ToTensor() # Convertiamo subito in tensore per la RAM
+        transforms.Resize(IMG_SIZE)
     ])
 
     full_dataset = ImageFolder(root=dataSetPath, transform=raw_transform)
@@ -117,7 +116,7 @@ if __name__ == '__main__':
     # Calcolo Mean e Std (Usiamo un DataLoader temporaneo sul Training Set)
     print("Calcolo Mean e Std sul training set...")
 
-    calc_transform = transforms.Compose([])
+    calc_transform = transforms.Compose([transforms.ToTensor()])  # Solo ToTensor per calcolo mean/std
 
     calc_dataset = TransformedSubset(train_subset_raw, transform=calc_transform)
     calc_loader = DataLoader(calc_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=NUM_WORKERS)
@@ -132,10 +131,12 @@ if __name__ == '__main__':
         transforms.RandomRotation(15),  # Data Augmentation (su PIL)
         transforms.RandomAffine(degrees=0, translate=(0.1, 0.1)), # Data Augmentation (su PIL)
         transforms.ColorJitter(brightness=0.2, contrast=0.2), # Data Augmentation (su PIL)
+        transforms.ToTensor(),
         transforms.Normalize(mean=mean.tolist(), std=std.tolist()) # Normalizzazione
     ])
 
     val_transform = transforms.Compose([
+        transforms.ToTensor(),
         transforms.Normalize(mean=mean.tolist(), std=std.tolist())
     ])
 

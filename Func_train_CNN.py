@@ -7,13 +7,15 @@ from sklearn.metrics import accuracy_score
 from Average_for_Batch_Value import AverageValueMeter
 import os
 
-def train_classifier(model, train_loader, test_loader, class_weights, exp_name="experiment_mlp_classifier", lr=0.001, epochs = 10, momentum = 0.9, logdir="logs_mlp_classifier"):
+def train_classifier(model, train_loader, test_loader, class_weights, exp_name="experiment_mlp_classifier", lr=0.0001, epochs = 10, momentum = 0.9, logdir="logs_mlp_classifier"):
     if class_weights is not None:
         criterion = nn.CrossEntropyLoss(weight=class_weights)
     else:
         criterion = nn.CrossEntropyLoss()
 
-    optimizer = SGD(model.parameters(), lr=lr, momentum=momentum, weight_decay=1e-4) #Usiamo weight_decay per la regolarizzazione della CNN
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=1e-4) #Usiamo weight_decay per la regolarizzazione della CNN
+
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.1, patience=3, verbose=True)
    
     loss_meter = AverageValueMeter()
     acc_meter = AverageValueMeter()
@@ -79,10 +81,14 @@ def train_classifier(model, train_loader, test_loader, class_weights, exp_name="
             print(f"{mode.capitalize()} Loss: {loss_meter.value():.4f} | {mode.capitalize()} Accuracy: {acc_meter.value():.4f}")
 
             # conserviamo i pesi del modello alla fine
-            if mode == "test" and acc_meter.value() > best_acc:
-                best_acc = acc_meter.value()
-                best_model_path = os.path.join(weights_dir, f"{exp_name}_BEST.pth")
-                torch.save(model.state_dict(), best_model_path)
+            if mode == "test":
+                val_accuracy = acc_meter.value()
+                scheduler.step(val_accuracy)
+
+                if val_accuracy > best_acc:
+                    best_acc = val_accuracy
+                    best_model_path = os.path.join(weights_dir, f"{exp_name}_BEST.pth")
+                    torch.save(model.state_dict(), best_model_path)
 
         
         output_path = os.path.join(weights_dir, f"{exp_name}_Last.pth")
