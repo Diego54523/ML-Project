@@ -7,18 +7,23 @@ from sklearn.metrics import accuracy_score
 from Average_for_Batch_Value import AverageValueMeter
 import os
 
-def train_classifier(model, train_loader, test_loader, class_weights, exp_name="experiment_mlp_classifier", lr=0.001, epochs = 100, momentum = 0.9, logdir="logs_mlp_classifier"):
+def train_classifier(model, train_loader, test_loader, class_weights, exp_name="experiment_mlp_classifier", lr=0.001, epochs = 10, momentum = 0.9, logdir="logs_mlp_classifier"):
     if class_weights is not None:
         criterion = nn.CrossEntropyLoss(weight=class_weights)
     else:
         criterion = nn.CrossEntropyLoss()
 
-    optimizer = SGD(model.parameters(), lr, momentum=momentum)
+    optimizer = SGD(model.parameters(), lr, momentum=momentum) #Usiamo SGD per MLP
    
     loss_meter = AverageValueMeter()
     acc_meter = AverageValueMeter()
 
     writer = SummaryWriter(join(logdir, exp_name))
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    weights_dir = os.path.join(script_dir, "weights")
+
+    os.makedirs(weights_dir, exist_ok=True)
     
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model.to(device)
@@ -43,7 +48,7 @@ def train_classifier(model, train_loader, test_loader, class_weights, exp_name="
                     x = batch[0].to(device)  # "portiamoli sul device corretto"
                     y = batch[1].to(device)
 
-                    x = x.view(x.size(0), -1)
+                    x = x.view(x.size(0), -1) #Questa riga crea problemi con la CNN perchè appiattische i dati in 2D, ma noi abbiamo bisogno di tensori di 3D o 4D
 
                     output = model(x)
 
@@ -72,12 +77,6 @@ def train_classifier(model, train_loader, test_loader, class_weights, exp_name="
             # loggiamo le stime finali)
             writer.add_scalar("loss/" + mode, loss_meter.value(), global_step=global_step)
             writer.add_scalar("accuracy/" + mode, acc_meter.value(), global_step=global_step)
-
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-
-            weights_dir = os.path.join(script_dir, "weights")
-
-            os.makedirs(weights_dir, exist_ok=True)
 
         # conserviamo i pesi del modello alla fine di un ciclo di training e test
         weigths_path = f"{exp_name}_weights_epoch_{e+1}.pth"
