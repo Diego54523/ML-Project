@@ -26,6 +26,12 @@ def train_classifier(model, train_loader, test_loader, class_weights, exp_name="
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model.to(device)
 
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    weights_dir = os.path.join(script_dir, "weights_Softmax_MLP")
+
+    os.makedirs(weights_dir, exist_ok=True)
+
     # definiamo un dizionario contenente i loader di training e test
     loader = {"train": train_loader, "test": test_loader}
 
@@ -76,14 +82,8 @@ def train_classifier(model, train_loader, test_loader, class_weights, exp_name="
             writer.add_scalar("loss/" + mode, loss_meter.value(), global_step=global_step)
             writer.add_scalar("accuracy/" + mode, acc_meter.value(), global_step=global_step)
 
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-
-            weights_dir = os.path.join(script_dir, "weights_Softmax_MLP")
-
-            os.makedirs(weights_dir, exist_ok=True)
-
         # conserviamo i pesi del modello alla fine di un ciclo di training e test
-        weigths_path = f"{exp_name}_weights_epoch_{e+1}.pth"
+        weigths_path = f"{exp_name}_weights_Softmax.pth"
         
         output_path = os.path.join(weights_dir, weigths_path)
 

@@ -19,6 +19,7 @@ def train_classifier(model, train_loader, test_loader, class_weights, exp_name="
     acc_meter = AverageValueMeter()
 
     writer = SummaryWriter(join(logdir, exp_name))
+
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
     weights_dir = os.path.join(script_dir, "weights")
@@ -79,7 +80,7 @@ def train_classifier(model, train_loader, test_loader, class_weights, exp_name="
             writer.add_scalar("accuracy/" + mode, acc_meter.value(), global_step=global_step)
 
         # conserviamo i pesi del modello alla fine di un ciclo di training e test
-        weigths_path = f"{exp_name}_weights_epoch_{e+1}.pth"
+        weigths_path = f"{exp_name}_weights.pth"
         
         output_path = os.path.join(weights_dir, weigths_path)
 

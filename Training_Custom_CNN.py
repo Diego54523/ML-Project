@@ -1,47 +1,16 @@
 import os
 import torch
 import numpy as np
-from torchvision import datasets, transforms
+from torchvision import transforms
 from torch.utils.data import DataLoader, random_split, Dataset
 from dotenv import load_dotenv
 from Get_Mean_std import get_mean_std
-from Custom_CNN_for_Feature_Extraction import CustomCNNFeatureExtractor
+from Custom_CNN import CustomCNNFeatureExtractor
 from Func_train_CNN import train_classifier
 from torchvision.datasets import ImageFolder
 import gc #Importo questa libreria per la gestione della memoria, dato che anche con una BATCH di 32 arivati al layer3 la memoria GPU si esaurisce, con questa classe per sicurezza pulisco innanzitutto la memoria prima di addestrare il modello
-import time
 from sklearn.metrics import classification_report
-
-#Creo una classe per caricare tutto in memoria in modo da ridurre di molto i tempi eliminando l'accesso a memoria ogni volta che chiedo un batch
-class InMemoryDataset(Dataset):
-    def __init__(self, root_dir, transform=None):
-        print(f"Caricamento dataset in RAM da: {root_dir}...")
-        start_t = time.time()
-        
-        # Usiamo ImageFolder temporaneo per leggere dal disco
-        temp_dataset = datasets.ImageFolder(root=root_dir, transform=transform)
-        
-        self.data = []
-        self.targets = temp_dataset.targets # Copiamo le label
-        
-        # Ciclo di caricamento
-        for i in range(len(temp_dataset)):
-            img, label = temp_dataset[i]
-            self.data.append((img, label))
-            
-            # Stampa progresso ogni 1000 immagini
-            if (i + 1) % 1000 == 0:
-                print(f"  Caricate {i + 1}/{len(temp_dataset)} immagini...")
-                
-        end_t = time.time()
-        print(f"Finito! Dataset caricato in RAM in {end_t - start_t:.1f} secondi.")
-
-    def __getitem__(self, index):
-        # Ritorna l'immagine già in memoria (velocissimo)
-        return self.data[index]
-
-    def __len__(self):
-        return len(self.data)
+from torch.utils.data import WeightedRandomSampler
 
 class TransformedSubset(Dataset):
     """
@@ -88,7 +57,7 @@ if __name__ == '__main__':
     gc.collect()
         
     BATCH_SIZE = 16
-    NUM_WORKERS = 4 #Per alleggerire il carico sulla memoria RAM, imposto a 0 il numero di workers (su Windows spesso dà problemi con valori >0)
+    NUM_WORKERS = 4
     IMG_SIZE = (178, 208) 
     DIVIDER = 0.8
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -131,8 +100,6 @@ if __name__ == '__main__':
         transforms.RandomHorizontalFlip(p=0.5),      # Data Augmentation (su PIL)
         transforms.RandomRotation(15),  # Data Augmentation (su PIL)
         transforms.RandomAffine(degrees=0, translate=(0.15, 0.15), scale=(0.9, 1.1)), # Data Augmentation (su PIL)
-        transforms.ColorJitter(brightness=0.2, contrast=0.2), # Data Augmentation (su PIL)
-        transforms.GaussianBlur(kernel_size=3, sigma=(0.1, 2.0)), # Data Augmentation (su PIL)
         transforms.ToTensor(),
         transforms.Normalize(mean=mean.tolist(), std=std.tolist()) # Normalizzazione
     ])
@@ -142,21 +109,25 @@ if __name__ == '__main__':
         transforms.Normalize(mean=mean.tolist(), std=std.tolist())
     ])
 
+    print("Configurazione WeightedRandomSampler...") #Serve per far si che in ogni batch ci sia lo stesso numero di esempi per ogni classe, in modo da bilanciare il training
+    train_targets = [full_dataset.targets[i] for i in train_subset_raw.indices]
+    class_counts = np.bincount(train_targets)
+    class_weights_calc = 1. / class_counts
+    sample_weights = [class_weights_calc[t] for t in train_targets]
+    
+    sampler = WeightedRandomSampler(
+        weights=sample_weights, 
+        num_samples=len(sample_weights), 
+        replacement=True
+    )
+
     # Creazione Dataset Finali usando il Wrapper
     final_train_dataset = TransformedSubset(train_subset_raw, transform=train_transform)
     final_val_dataset = TransformedSubset(val_subset_raw, transform=val_transform)
 
     # Creazione DataLoader Finali
-    trainLoader = DataLoader(final_train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=NUM_WORKERS)
+    trainLoader = DataLoader(final_train_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=NUM_WORKERS, sampler=sampler)
     valLoader = DataLoader(final_val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=NUM_WORKERS)
-
-    # Calcolo Class Weights
-    try:
-        class_weights = calculate_class_weights(full_dataset, train_subset_raw.indices, DEVICE)
-        print(f"Class Weights calcolati: {class_weights}")
-    except Exception as e:
-        print(f"Attenzione: Impossibile calcolare i pesi delle classi ({e}). Uso None.")
-        class_weights = None
 
     # Setup Modello
     model = CustomCNNFeatureExtractor(num_classes=4)
@@ -167,10 +138,10 @@ if __name__ == '__main__':
         model, 
         train_loader=trainLoader, 
         test_loader=valLoader, 
-        class_weights=class_weights, 
+        class_weights=None, 
         exp_name="custom_cnn_classifier", 
         logdir="logs_custom_cnn_classifier",
-        patience=15
+        patience=5
     )
 
     model.eval() # Modalità valutazione
@@ -197,4 +168,4 @@ if __name__ == '__main__':
 
     # Opzionale: Matrice di Confusione
     print("\nClassification Report:")
-    print(classification_report(all_labels, all_preds, target_names=["Non", "Very Mild", "Mild", "Moderate"]))
+    print(classification_report(all_labels, all_preds, target_names=["Mild", "Moderate", "Non", "Very Mild"]))

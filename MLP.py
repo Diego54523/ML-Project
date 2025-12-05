@@ -14,7 +14,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 #Carichiamo le feature estratte e salvate in precedenza
-data = np.load(os.path.join(script_dir, "mri_features.npz"))
+data = np.load(os.path.join(script_dir, "mri_features_custom.npz"))
 X_train = data['train_feats']
 y_train = data['train_labels']
 X_val = data['val_feats']
@@ -32,9 +32,9 @@ feat_val_data = TensorDataset(torch.from_numpy(X_val), torch.from_numpy(y_val))
 feat_train_loader = DataLoader(feat_train_data, batch_size=32, shuffle=True)
 feat_val_loader = DataLoader(feat_val_data, batch_size=32, shuffle=False)
 
-# CONFIGURIAMO L'MLP PER LE FEATURE
-INPUT_SIZE = 512  
-HIDDEN_UNITS = 256 
+# CONFIGURIAMO L'MLP PER LE FEATURE (INPUT_SIZE = 512 e HIDDEN_UNITS = 256 per ResNet18, ora rispettivamente 128 e 64 per Custom CNN)
+INPUT_SIZE = 128
+HIDDEN_UNITS = 64
 NUM_CLASSES = 4
 
 # Calcoliamo dei pesi che verranno usati per  alla frequenza (più è rara la classe, più alto il peso)

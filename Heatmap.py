@@ -1,5 +1,4 @@
 import torch
-import torch.nn as nn
 from torchvision import models, transforms
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader, random_split
