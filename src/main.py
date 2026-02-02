@@ -12,6 +12,7 @@ def main():
         choices = [
             "train_radnet",
             "train_cnn", 
+            "train_svm",
             "train_mlp", 
             "train_mlp_on_radnet",
             "extract_resnet",
@@ -29,6 +30,10 @@ def main():
 
     elif args.task == "train_cnn":
         from training.Training_Custom_CNN import main as run
+        run()
+        
+    elif args.task == "train_svm":
+        from training.SVM import main as run
         run()
         
     elif args.task == "train_mlp":

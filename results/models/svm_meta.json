@@ -1,0 +1,15 @@
+{
+  "class_names": [
+    "MildDemented",
+    "ModerateDemented",
+    "NonDemented",
+    "VeryMildDemented"
+  ],
+  "best_params": {
+    "C": 1000,
+    "gamma": 0.008,
+    "kernel": "rbf"
+  },
+  "cv_best_score": 0.9811795824726046,
+  "test_acc": 0.9795483596080102
+}
