@@ -3,6 +3,7 @@
 # =========================
 numpy
 scikit-learn
+joblib
 tqdm
 python-dotenv
 

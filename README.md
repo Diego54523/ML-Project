@@ -131,7 +131,11 @@ streamlit run src/demo/demo.py
 - **Dataset mode**: Selezione di immagini da un dataset ImageFolder, con ground truth reale (derivata dalla cartella).
 - **Single image mode**: Caricamento manuale di una singola immagine (ground truth non disponibile).
 
-La demo utilizza **modelli già addestrati** e **non richiede training**.
+La demo utilizza **modelli già addestrati** e permette esclusivamente
+di testare il comportamento dei classificatori in **fase di inferenza**.
+
+Il training dei modelli e l’estrazione delle feature vengono effettuati
+tramite pipeline dedicate eseguibili da CLI e non sono parte della demo.
 
 ---
 
