@@ -8,8 +8,10 @@ Il progetto include pipeline complete di **training**, **feature extraction**, *
 ## 📁 Struttura del progetto
 
 ```text
-ML-PROJECT/
+ML-PROJECT/           
+├── docs/               # Relazione
 ├── notebooks/          # Notebook esplorativi
+│   ├── images/         # Immagini per i notebook
 ├── results/            # Output (pesi, feature, risultati)
 ├── src/
 │   ├── data/           # Utility e dataset helper
@@ -18,9 +20,10 @@ ML-PROJECT/
 │   ├── models/         # Definizione modelli
 │   ├── training/       # Training ed estrazione feature
 │   └── main.py         # Entry point CLI
-├── requirements.txt    # Dipendenze
+├── .gitignore
+├── LICENSE
 ├── README.md
-└── LICENSE
+└── requirements.txt    # Dipendenze
 ```
 
 ---
@@ -136,6 +139,14 @@ di testare il comportamento dei classificatori in **fase di inferenza**.
 
 Il training dei modelli e l’estrazione delle feature vengono effettuati
 tramite pipeline dedicate eseguibili da CLI e non sono parte della demo.
+
+---
+
+## 📄 Relazione
+
+La relazione è pensata come documento di supporto alla comprensione delle scelte metodologiche adottate durante lo sviluppo del progetto: 
+
+👉 [Relazione.pdf](docs/Relazione.pdf)
 
 ---
 
