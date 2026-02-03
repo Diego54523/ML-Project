@@ -98,6 +98,7 @@ python src/main.py --task <task>
 #### Task disponibili:
 - `train_cnn` - training Custom CNN
 - `train_radnet` - training RadNet
+- `train_svm` - training SVM su feature estratte 
 - `train_mlp` - training MLP su feature estratte
 - `train_mlp_on_radnet` - training MLP su feature RadNet
 - `extract_resnet` - estrazione feature da ResNet18
