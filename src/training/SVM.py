@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from sklearn.preprocessing import StandardScaler
+from sklearn.inspection import DecisionBoundaryDisplay
 from sklearn.svm import SVC
 from sklearn.decomposition import PCA
 from sklearn.model_selection import GridSearchCV
@@ -87,8 +88,30 @@ def main():
 
     pca_path = MODELS_DIR / "svm_pca2d.joblib"
     joblib.dump(pca, pca_path)
+    
+    viz_model = SVC(
+        kernel=grid.best_params_['kernel'], 
+        C=grid.best_params_['C'],
+        gamma=grid.best_params_['gamma'],
+        class_weight='balanced',
+        random_state=42
+    )
+    viz_model.fit(X_train_pca, y_train)
 
     fig, ax = plt.subplots(figsize=(10, 8))
+    
+    DecisionBoundaryDisplay.from_estimator(
+        viz_model,
+        X_train_pca,
+        response_method="predict",
+        cmap=plt.cm.RdYlBu, 
+        alpha=0.6,
+        ax=ax,
+        grid_resolution=300,
+        xlabel="Principal Component 1",
+        ylabel="Principal Component 2",
+    )
+    
     scatter = ax.scatter(
         X_train_pca[:, 0],
         X_train_pca[:, 1],
