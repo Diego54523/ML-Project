@@ -11,7 +11,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import classification_report, confusion_matrix
 
 def main():
-    PROJECT_ROOT = Path(__file__).resolve().parents[2]  # ML-Project/
+    PROJECT_ROOT = Path(__file__).resolve().parents[2] 
     RESULTS_DIR = PROJECT_ROOT / "results"
     FEATURES_DIR = RESULTS_DIR / "features"
     MODELS_DIR = RESULTS_DIR / "models"
@@ -39,12 +39,12 @@ def main():
     else:
         class_names = np.unique(y_train).astype(str).tolist()
 
-    # ---- Scaling
+    
     scaler = StandardScaler()
     X_train_s = scaler.fit_transform(X_train)
     X_test_s = scaler.transform(X_test)
 
-    # ---- Grid Search
+    
     param_grid = {
         "C": [500, 1000, 2000, 5000],
         "gamma": [0.008, 0.01, 0.012, 0.015],
@@ -75,14 +75,14 @@ def main():
     print("Confusion Matrix:")
     print(confusion_matrix(y_test, y_pred))
 
-    # ---- Save artifacts for demo inference
+    
     svm_path = MODELS_DIR / "svm_best.joblib"
     scaler_path = MODELS_DIR / "svm_scaler.joblib"
 
     joblib.dump(best_model, svm_path)
     joblib.dump(scaler, scaler_path)
 
-    # ---- Optional: PCA plot (just for report/demo visualization)
+    
     pca = PCA(n_components=2, random_state=42)
     X_train_pca = pca.fit_transform(X_train_s)
 
@@ -131,7 +131,7 @@ def main():
     fig.savefig(plot_path, dpi=200)
     plt.close(fig)
 
-    # ---- Save a small metadata file
+
     meta = {
         "class_names": class_names,
         "best_params": grid.best_params_,
